@@ -255,7 +255,9 @@ class Client(Methods):
         self.hide_password = hide_password
         self.max_concurrent_transmissions = max_concurrent_transmissions
 
-        self.executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
+        self.handler_executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Handler")
+        self.filter_executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Filter")
+        self.progress_executor = ThreadPoolExecutor(self.workers, thread_name_prefix="Progress")
 
         if self.session_string:
             self.storage = MemoryStorage(self.name, self.session_string)
@@ -919,7 +921,7 @@ class Client(Methods):
                             if inspect.iscoroutinefunction(progress):
                                 await func()
                             else:
-                                await self.loop.run_in_executor(self.executor, func)
+                                await self.loop.run_in_executor(self.progress_executor, func)
 
                         if len(chunk) < chunk_size or current >= total:
                             break
@@ -1007,7 +1009,7 @@ class Client(Methods):
                                 if inspect.iscoroutinefunction(progress):
                                     await func()
                                 else:
-                                    await self.loop.run_in_executor(self.executor, func)
+                                    await self.loop.run_in_executor(self.progress_executor, func)
 
                             if len(chunk) < chunk_size or current >= total:
                                 break
